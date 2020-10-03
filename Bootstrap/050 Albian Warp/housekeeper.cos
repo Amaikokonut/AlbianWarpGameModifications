@@ -1,0 +1,133 @@
+**THINGS THE HOUSEKEEPER DOES:
+***~ Tracks when the client goes on and offline and tells other agents what is going on (script 1000)
+***~ Handles the warping of creatures
+***~ Handles the deletion of warped creatures from the My Creatures folder
+
+
+enum 1 1 35700
+	kill targ
+next
+
+*inject actual agent
+new: simp 1 1 35700 "blnk" 1 0 0
+tick 200
+*ov00 is going to account for RACE-- the time the last tick took in MS
+setv ov00 0
+seta game "aw_housekeeper_agent" targ
+
+
+scrp 1 1 35700 9
+	inst
+
+*if race is less than 50, we're in fast ticks, so don't go on until you
+*total is at least 50 (should be about the equivlent of not being in fast ticks).
+	addv ov00 race
+	doif ov00 lt 50
+		stop
+	else
+		setv ov00 0
+	endi
+
+	doif game "aw_online_indicator" eq 0 and game "aw_status" eq "online"
+		sets game "aw_status" "offline"
+		sets game "status" "offline"
+		dbg: outs "client closed/offline, going offline"
+
+* 		set newly online flag in the WWR (this is just so the WWR doesn't
+*		spam you with who's online after you just connected)
+		targ game "aw_wwr_agent"
+		setv ov02 2
+
+*		set all contacts' status offline!
+		sets va99 ""
+		sets va00 "_status"
+		loop
+			sets va10 gamn va99
+*			see if string contains string
+			setv va20 sins va10 1 va00
+			doif va20 ne -1
+				doif type game va10 eq 2
+					doif game va10 eq "online"
+						sets game va10 "offline"
+					endi
+				endi
+			endi
+			sets va99 va10
+		untl va10 eq ""
+
+*	tell the online indicator you are offline
+		enum 1 2 14
+			mesg writ targ 501
+		next
+
+	elif game "aw_online_indicator" eq 1 and game "aw_status" eq "offline"
+		sets game "aw_status" "online"
+		sets game "status" "online"
+		dbg: outs "client open/online, going online"
+
+*		tell the online indicator you are online
+		enum 1 2 14
+			mesg writ targ 500
+		next
+	else
+*		dbg: outs "no status changes"
+*		dbg: outs game "aw_status"
+*		dbg: outv game "aw_online_indicator"
+	endi
+
+
+	setv game "aw_online_indicator" 0
+endm
+
+***
+* Warp Creature to other Player
+* _p1_ = creature (creature)
+* _p2_ = recipient user (str)
+***
+scrp 1 1 35700 1000
+	lock
+	doif game "aw_status" eq "online"
+* Target the Creature
+		targ _p1_
+* Get its moniker and save it to va01 (important to get the filename of the exported creature)
+		sets va01 gtos 0
+		sets name "aw_creature_monicer" va01
+		sets va02 hist name va01
+		sets name "aw_creature_name" va02
+		sets name "aw_sender" game "user_of_this_world"
+* Set the recipient user id on the Creature that will be warped
+		sets name "Pray Extra recipient_userID" _p2_
+* Set the sender user id on the Creature that will be warped
+		sets name "Pray Extra sender_user_ID" game "user_of_this_world"
+		sets name "Last Network User" game "user_of_this_world"
+* export the Creature with the custom Chunk Type `WARP` (warp out)
+		setv va99 pray expo "warp"
+*		check to make sure it worked...
+		doif va99 eq 1
+			targ pntr
+			sndc "buzz"
+			dbg: outs "Could not warp creature because it is already on disk!"
+		else
+* Create a aw_message_object that tells the client the moniker of the exported creature
+		  new: simp 1 1 35760 "blnk" 1 0 0
+		  sets name "aw_recipient" _p2_
+		  sets name "moniker" va01
+		  sets name "creature_name" va02
+		endi
+	endi
+	unlk
+endm
+
+***
+* Delete Creature File from Export folder, containing the given moniker
+* _p1_ = moniker (str)
+***
+scrp 1 1 35700 1337
+	sets va01 _p1_
+	adds va01 ".warp"
+	dbg: outs "try to delete creature with moniker: "
+	dbg: outs va01
+	setv va00 pray kill va01
+	dbg: outv va00
+	outv va00
+endm

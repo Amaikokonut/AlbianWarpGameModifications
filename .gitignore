@@ -1,0 +1,20 @@
+# Ignore everything
+/*
+
+#except these files:
+!.gitignore
+!LICENSE.md
+!README.md
+
+# And the Bootstrap modifications
+!Misc
+!Bootstrap/
+Bootstrap/*
+!Bootstrap/dsbuild 195/
+!Bootstrap/050 Albian warp/
+Bootstrap/000 Switcher/*
+!Bootstrap/000 Switcher/AW eame vars.cos
+!My Agents/
+My Agents/*
+!My Agents/aw_updater.agent
+!docs/

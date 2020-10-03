@@ -1,0 +1,454 @@
+*New Albian Warp comms functions, aka Commsgeat
+*replaces and removes scripts in comms screen.cos
+dbg: outs "injecting commsgeat"
+*Just Went Online:
+*Checks who is online and offline
+*Doesn't work right now til AW implements it
+scrp 1 2 210 135
+	inst
+*if in view contacts mode
+	doif ov00 eq 1
+*	and first page
+		doif ov07 eq 0
+*	make any online user and friend contacts right
+			part 16
+			pose 1
+			gsub friend
+			doif va90 eq 0
+				part 13
+				pose 0
+			else
+				part 13
+				pose 1
+			endi
+		endi
+	endi
+
+*	works out if your any of your friends are online
+	subr friend
+*		set first game variable to check
+		sets va98 ""
+*		set search string chunk
+		sets va11 "_group"
+
+		loop
+			sets va12 gamn va98
+*see if string contains search
+			setv va20 sins va12 1 va11
+*	it does
+			doif va20 ne -1
+*			see if this person is a friend
+				doif game va12 eq 2
+*			chop it up to get user ID
+					subv va20 1
+					sets va30 subs va12 1 va20
+
+*	have a look and see if this user is on
+			doif stoi caos 0 0 va30 0 game "f_aw_ulin" 0 1 va99 eq 1
+*	they are, set flag
+					setv va90 1
+			endi
+				endi
+			endi
+*	set 'previous entry' to current entry
+			sets va98 va12
+		untl va12 eq ""
+	retn
+endm
+
+
+****event to fill in the spaces - shows contacts
+**This is a long one.
+
+scrp 1 2 210 1010
+	inst
+*	dbg: outs "reloading contacts"
+
+*	dbg: outs "displaying parts"
+****	create the list of known contacts
+*	ov01	is the part# to use - incremented with each new part
+	setv ov01 11
+
+*	_p1_ is which page to display
+*	0=1st page, 1=2nd page, 2=3rd page etc
+	setv va01 _p1_
+* 	write that in the title
+	part 10
+	sets va81 read "contact book" 0
+	adds va81 " ("
+	setv va83 va01
+	addv va83 1
+	adds va81 read "contact book" 3
+	adds va81 " "
+	adds va81 vtos va83
+	adds va81 ")"
+	ptxt va81
+
+*	dbg: outs "displaying parts 2"
+*	va02 this is how many valid entries searched so far
+	setv va02 0
+*	va03 is when to start (based on page required
+	setv va03 _p1_
+	mulv va03 20
+	addv va03 1
+*	ov07 is long term record of page number
+	setv ov07 _p1_
+
+*	work out whether you need to display 'back' button or not
+	doif ov07 gt 0
+		part 8
+		anim [0 0 1 0 1 0 1]
+	else
+		part 8
+		pose 0
+	endi
+
+*	dbg: outs "displaying parts 3"
+*	wipe whose on register for us -
+*	then we add in every on this page with net: whon below
+	sets va99 caos 0 0 targ 0 game "f_aw_whoz" 1 0 va99
+*	dbg: outs "wiped WWR"
+
+*	va90 is X offset of any new parts created
+*	va91 is Y offset of any new parts created
+	setv va90 180
+	setv va91 -15
+*	va92 is how many entries displayed so far: 10 per column, 2 columns
+	setv va92 0
+*	va99 is the game variable to seach, starts at ""
+	sets va99 ""
+*	search string
+	sets va00 "_contact"
+*	loop through all game variables
+*	dbg: outs "start contact search loop"
+	loop
+
+*	set va10 to the string of the current game variable
+		sets va10 gamn va99
+*	set va20 to the value where search string is contained
+*	in current game variable
+		setv va20 sins va10 1 va00
+*	if va20 ne -1 then the current string is what we are looking for
+		doif va20 ne -1
+*	increase 'possible entry' variable
+			addv va02 1
+			doif va02 ge va03
+*	only go through this hassle if you actually want this page
+
+*		chop up string so only head remains
+*		this makes va30 the USER ID
+				subv va20 1
+				sets va30 subs va10 1 va20
+* make sure we are in the whose wanted register
+* (the icon lights are updated by this in the wwr script 137)
+*				dbg: outs "presenting:"
+*				dbg: outs va30
+*				dbg: outs "the wild contact"
+				doif va30 <> "!friend" and va30 <> "!net: ruso"
+					sets va99 caos 0 0 va30 targ game "f_aw_whon" 1 0 va99
+					inst
+				endi
+*		get nickname for this user
+				sets va40 "_nick"
+*		copy user ID to another variable
+				sets va41 va30
+*		create nickname string
+				adds va41 va40
+
+*				make sure nickname exists
+				setv va65 0
+				loop
+					doif type game va41 ne 2
+						delg va41
+						wait 5
+					else
+*					get value from nickname string
+						sets va42 game va41
+						setv va65 1
+					endi
+				untl va65 eq 1
+
+*	create the box to hold the nickname
+				pat: fixd ov01 "comms" 9 va90 va91 0 "whiteontransparentchars"
+				part ov01
+				frmt 1 1 1 1 1 1 0
+*				pose 1
+**		add user ID chunk to end of nickname
+*				sets va50 " ("
+*				adds va50 va30
+*				adds va50 ")"
+*				adds va42 va50
+
+*				display nickname
+				ptxt va42
+
+*				dbg: outs "displayed nickname"
+
+*				increment part #
+				addv ov01 1
+*				change X  offsets for part position
+				addv va90 150
+
+*	find out whether user is friend/foe or acquantance
+*		copy USER ID to new variable
+				sets va43 va30
+*		add new search chunk
+				sets va44 "_group"
+				adds va43 va44
+*		set va55 to be value of game variable "_group"
+				setv va55 game va43
+**		if this isn't 0 then subtract 1 to make it a pose #
+*				doif va55 ne 0
+*					subv va55 1
+*				endi
+*		pose# is 2 higher than group value
+*		_group values: 1=casual, 2=friend, 3=foe
+				doif va55 ne 0
+					addv va55 4
+				else
+					addv va55 5
+				endi
+*	create the friend/foe display
+				pat: butt ov01 "comms" 49 8 va90 va91 0 [] 1020 0
+				part ov01
+				pose va55
+*			increment part#
+				addv ov01 1
+*				change X  offsets for part position
+				addv va90 25
+
+*				dbg: outs "set friend/foe status"
+
+*	find out whether they are online or not
+
+				setv va45 stoi caos 0 0 va30 0 game "f_aw_ulin" 1 0 va99
+*				dbg: outs va30
+*				dbg: outv va45
+
+
+*	create the on/off line display
+				pat: dull ov01 "comms" 14 va90 va91 0
+				part ov01
+				pose va45
+
+*				dbg: outs "set online/offline status"
+
+*			increment part#
+				addv ov01 1
+*			increment 'how many are being displayed"
+				addv va92 1
+*				change X and Y offsets for part position
+				setv va90 180
+*					need to change Y offset if still in same column, otherwise start again
+				doif va92 eq 10
+					setv va91 -15
+				else
+					addv va91 16
+				endi
+*				if there are 10 entries need to start another column
+				doif va92 ge 10
+*					if reached max entries (20) then stop counting and create arrow button
+					doif va92 eq 20
+						part 9
+						anim [0 0 1 0 1 0 1]
+						sets va10 ""
+					else
+*					otherwise don't bother with 'next' arrow
+						part 9
+						pose 0
+					endi
+					addv va90 200
+				endi
+			endi
+		endi
+*	carry on loop, increment current game variable
+		sets va99 va10
+*	keep going until you've looked at all game variables
+	untl va10 eq ""
+
+*	dbg: outs "end contact search loop"
+
+*	'export contacts' buttons
+*	pat: butt ov01 "comms" 34 2 480 -38 1 [] 1013 0
+
+
+*	create the import/export contact buttons
+	rtar 1 2 47
+	doif targ ne null
+		part 1
+		doif base eq -1
+			mesg writ targ 1000
+		endi
+	endi
+
+
+*	works out if your any of your friends are on
+	subr friend
+*		set first game variable to check
+		sets va71 ""
+*		set search string chunk
+		sets va11 "_group"
+
+		loop
+			sets va72 gamn va71
+*see if string contains search
+			setv va73 sins va72 1 va11
+*	it does
+			doif va73 ne -1
+*			see if this person is a friend
+				doif game va72 eq 2
+*			chop it up to get user ID
+					subv va73 1
+					sets va74 subs va72 1 va73
+
+*	have a look and see if this user is on
+					doif stoi caos 0 0 va74 0 game "f_aw_ulin" 1 0 va99 eq 1
+*	they are, set flag
+					setv va70 1
+					endi
+				endi
+			endi
+*	set 'previous entry' to current entry
+			sets va71 va72
+		untl va72 eq ""
+	retn
+
+endm
+*whew...
+
+**********WEBB page events
+**press web button
+*parts 3, 5, 7, 9 are the default weblinks
+
+*!* only including this in the AW docs to change net:user
+*to game "user_of_this_world"
+*Eventually we could change this to an AW link or something
+
+scrp 1 2 219 1000
+	inst
+*	ds central
+	doif _p1_ eq 3
+		sets va00 read "Docking Station Central" 0
+*	support
+	elif _p1_ eq 5
+		sets va00 read "Docking Station Support" 0
+*	c3 info
+	elif _p1_ eq 7
+		sets va00 read "C3 info" 0
+*	web link
+	elif _p1_ eq 9
+		sets va00 read "World Link" 0
+		adds va00 wuid
+		adds va00 "&world_name="
+		adds va00 wnam
+
+* separate user id into uid and hid
+		sets va01 game "user_of_this_world"
+		setv va02 stoi va01
+		setv va10 sins va01 1 "+"
+		addv va10 1
+		setv va11 strl va01
+		subv va11 va10
+		addv va11 1
+		setv va03 stoi subs va01 va10 va11
+
+		adds va00 "&world_uid="
+		adds va00 vtos va02
+		adds va00 "&world_hid="
+		adds va00 vtos va03
+
+
+	endi
+
+	doif va00 ne ""
+		webb va00
+	endi
+
+endm
+
+***WWR user online event
+scrp 1 2 210 137
+	inst
+
+	dbg: outs "WWR - user online"
+	dbg: outs _p1_
+
+*	if you are in 'view contacts' mode
+	doif ov00 eq 1
+*	only do this if on screen
+*		doif visi 0 eq 1
+
+*		build search string
+		sets va00 _p1_
+		adds va00 "_nick"
+*		get nickname of this user
+		sets va01 game va00
+*		now look for va01 being in a text box
+		setv va02 11
+		setv va99 0
+*		start looking in part 11, finish with part 68
+		loop
+			part va02
+*			make sure part exists
+			doif base eq -1
+				setv va02 71
+			else
+				doif ptxt eq va01
+					setv va03 va02
+					addv va03 2
+					part va03
+					pose 1
+					setv va02 71
+				endi
+				addv va02 3
+			endi
+		untl va02 ge 71
+*		endi
+	endi
+endm
+
+
+
+***WWR user offline event
+scrp 1 2 210 138
+	inst
+
+*	only do this if on screen
+	doif visi 0 eq 1
+
+
+
+		dbg: outs "WWR - user offline"
+		dbg: outs _p1_
+
+*	if you are in 'view contacts' mode
+		doif ov00 eq 1
+*		build search string
+			sets va00 _p1_
+			adds va00 "_nick"
+*		get nickname of this user
+			sets va01 game va00
+*		now look for va01 being in a text box
+			setv va02 11
+			setv va99 0
+*		start looking in part 11, finish with part 68
+			loop
+				part va02
+*			make sure part actually exists
+				doif base eq -1
+					setv va02 71
+				else
+
+					doif ptxt eq va01
+						setv va03 va02
+						addv va03 2
+						part va03
+						pose 0
+						setv va02 71
+					endi
+					addv va02 3
+				endi
+			untl va02 ge 71
+		endi
+	endi
+endm
