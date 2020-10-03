@@ -1,20 +1,14 @@
-# AlbianWarp - Game Modifications
+# About
 
-This repository contains the Creatures 3/Docking Station Game modifications needed for AlbianWarp to work.
+This (is intended to eventually be) a repurposed fork of the AlbianWarpGameModifications intended-- not for use with Albian Warp, but for local ant-farm-style linking together of multiple instances of DS running at the same time.
 
 ## Installation
 
-The Bootstrap directory must be copied into the Docking Station installation directory, if you downloaded Creatures Exodus from gog.com, the standard installation directory should be `C:\GOG Games\Creatures Exodus\Docking Station` The Bootstrap directory will then integrate into the original Bootstrap directory.
-
-The bootstrap should only overwrite one file at most-- the file called 'reinject_updated_agents.cos' in the 'dsbuild 195' directory. A backup of this file is provided in the same directory should you wish to restore it later. Note that restoring the file will disable the functionality of Albian Warp.
-
-The My Agents folder can also be copied into your Docking Station installation directory, but it is not required. It contains only an agent you can use to update already existing worlds to the version of Albian Warp currently in your bootstrap. Please back up worlds that are important to you before injecting it, as it has not been well tested. Newly created worlds will not need this agent.
-
-Unless you are developing, you can ignore the Misc. folder.
+This set of scripts is intended for and developed to function in Linux with the [dstation-2020](https://github.com/Nazushvel/dstation-2020/) install script. With this in mind, the majority of the files should go into the mods directory that dstation2020 provides. But since none of this works yet, we'll be figuring out the specifics later.
 
 ## Usage
 
-The Game Modification by itself are not very useful, as they are only used by the [AlbianWarpClient](https://github.com/AlbianWarp/AlbianWarpClient).
+None of this works at all yet, so this will be updated later.
 
 ## License
 
